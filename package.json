@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "node-web-audio-api": "^0.21.1"
+  }
+}
