@@ -20,6 +20,11 @@ async function main() {
             }
 
             childProcess = spawn('aplay', [`${freq}.wav`]);
+
+            childProcess.on('exit', () => {
+                childProcess = spawn('aplay', [`${freq}.wav`]);
+            });
+
             oldFreq = freq;
         }
         await new Promise(resolve => setTimeout(resolve, 500));
