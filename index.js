@@ -5,29 +5,16 @@ const {spawn} = require('child_process');
 let childProcess, oldFreq, freq;
 
 async function main() {
-    let vol, prevVol;
     while (true) {
-        vol = volume.getVolume();
-        if (vol !== prevVol) {
-            console.log(`${vol}% volume`);
-            prevVol = vol;
-        }
-
-        freq = vol < 25 ? '19000' : '20700';
-        if (freq !== oldFreq) {
-            if (childProcess) {
+        freq = volume.getVolume() < 25 ? '19000' : '20700';
+        if (freq !== oldFreq || !childProcess || childProcess?.exitCode !== null) {
+            if (childProcess?.exitCode === null) {
                 childProcess.kill();
             }
-
             childProcess = spawn('aplay', [`${freq}.wav`]);
-
-            childProcess.on('exit', () => {
-                childProcess = spawn('aplay', [`${freq}.wav`]);
-            });
-
-            oldFreq = freq;
         }
         await new Promise(resolve => setTimeout(resolve, 500));
+        oldFreq = freq;
     }
 }
 
