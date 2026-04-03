@@ -24,6 +24,18 @@ node-gyp configure build
 node index.js
 ```
 
+## PM2
+
+If PM2 shows **errored** and the log has **`ERR_DLOPEN_FAILED`** on `volume.node`, the addon was built for a **different Node** than the one PM2 uses (common with **nvm**: login shell has nvm’s `node`, PM2 often does not).
+
+1. Pick one Node and use it everywhere, e.g. `node -p process.execPath`.
+2. Rebuild: `npm run build` (or `node-gyp rebuild`) **with that same `node`** on your `PATH`.
+3. Start PM2 with that interpreter, e.g.  
+   `JABRA_PM2_INTERPRETER="$(which node)" pm2 start ecosystem.config.js`  
+   (`ecosystem.config.js` reads **`JABRA_PM2_INTERPRETER`**; default is `node` from PM2’s environment).
+
+After OS login, ensure the same interpreter is set for **`pm2 resurrect`** (export in the shell/profile that runs PM2, or use an absolute path to your nvm Node in **`JABRA_PM2_INTERPRETER`**).
+
 ## Debug: volume sweep
 
 Interactive check: **bisection from 50%** across **5…100%** (5% steps); **first “n” ends the session** (no more probes). All **y** completes all 20 levels in bisection order. **10 s** wait + **square-wave** beep + **y/n** per step. Restores volume when possible.
