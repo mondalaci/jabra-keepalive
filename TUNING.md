@@ -30,15 +30,16 @@ Keep enough **real PCM** hitting the Bluetooth path so Jabra (e.g. Evolve2 85) d
 Mixer value comes from native `getVolume()` (ALSA `Master`, 0–100).
 
 1. **`linear`** = `max(1, percent) / 100`.
-2. **Comfort curve:** `baseline = 0.00125 / linear`, Gaussian **notch** at **0.4** linear (`z = (linear - 0.4) / 0.13`, depth **0.38**).
-3. **Wake bump:** `wake = 0.003 * exp(-((linear - 0.39) / 0.17)²)` then `peak = max(comfort, wake)`.
+2. **Comfort curve:** `baseline = 0.00125 / linear`, Gaussian **notch** at **0.4** linear (`z = (linear - 0.4) / 0.12`, depth **0.46**).
+3. **Wake bump:** `wake = 0.00235 * exp(-((linear - 0.39) / 0.15)²)` then `peak = max(comfort, wake)`.
 4. **First clamp:** `min(preLiftCap, max(0.0004, peak))` with **`preLiftCap = 0.017`** when `linear < 0.22` else **`0.012`**.
 5. **Low-master lift:** if `linear < 0.15`, `peak *= 1 + (0.15 - linear) * 3.1`, then `min(0.028, max(0.0005, peak))`.
 6. **wakeLowMid:** `peak = max(peak, 0.012 * exp(-((linear - 0.11) / 0.22)²))` — broad assist; not sufficient alone for BT.
 7. **High-master squash:** if `linear > 0.72`, `peak *= 1 - 0.6 * t²` with `t = min(1, (linear - 0.72) / 0.28)`.
 8. **Effective-output floor** (if `linear < 0.48`): `peak = max(peak, E_MIN / max(linear, E_LINEAR_FLOOR))`, then cap **`E_PEAK_CAP`**. Heuristic: BT needs enough **peak × linear**; a **fixed digital floor** (old `SUB22_PEAK_MIN`) was still ×linear **too quiet** at the output.
 9. **`percent < 0`:** ALSA read failed — return **`~0.032`** (capped). **Previously `percent < 0` was treated as 50%,** which skipped all low-volume logic.
-10. Return `max(0.00035, peak)`.
+10. **Mid-band cap:** if `0.38 ≤ linear ≤ 0.52`, `peak = min(peak, 0.0055)` to reduce audibility around ~40–50% Master.
+11. Return `max(0.00035, peak)`.
 
 ### Other (top of `index.js`)
 

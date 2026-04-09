@@ -35,10 +35,12 @@ function peakForMasterPercent(percent) {
   }
   const linear = Math.max(1, percent) / 100;
   const baseline = 0.00125 / linear;
-  const z = (linear - 0.4) / 0.13;
-  const notch = 1 - 0.38 * Math.exp(-z * z);
+  // Mid-volume tends to be the most audible; notch it a bit harder.
+  const z = (linear - 0.4) / 0.12;
+  const notch = 1 - 0.46 * Math.exp(-z * z);
   let peak = baseline * notch;
-  const wake = 0.003 * Math.exp(-Math.pow((linear - 0.39) / 0.17, 2));
+  // Keep a small wake bump, but avoid audible “hiss” around ~45%.
+  const wake = 0.00235 * Math.exp(-Math.pow((linear - 0.39) / 0.15, 2));
   peak = Math.max(peak, wake);
   const preLiftCap = linear < 0.22 ? 0.017 : 0.012;
   peak = Math.min(preLiftCap, Math.max(0.0004, peak));
@@ -55,6 +57,11 @@ function peakForMasterPercent(percent) {
   if (linear < 0.48) {
     const need = E_MIN / Math.max(linear, E_LINEAR_FLOOR);
     peak = Math.min(E_PEAK_CAP, Math.max(peak, need));
+  }
+  // Extra safety cap around the “most audible” mid band.
+  // (Keeps the effective floor from making ~40–50% Master annoyingly loud.)
+  if (linear >= 0.38 && linear <= 0.52) {
+    peak = Math.min(peak, 0.0055);
   }
   return Math.max(0.00035, peak);
 }
